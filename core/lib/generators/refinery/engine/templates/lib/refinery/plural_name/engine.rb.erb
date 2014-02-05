@@ -1,12 +1,12 @@
 module Refinery
   module <%= namespacing %>
     class Engine < Rails::Engine
-      include Refinery::Engine
+      extend Refinery::Engine
       isolate_namespace Refinery::<%= namespacing %>
 
       engine_name :refinery_<%= extension_plural_name %>
 
-      initializer "register refinerycms_<%= plural_name %> plugin" do
+      before_inclusion do
         Refinery::Plugin.register do |plugin|
           plugin.name = "<%= plural_name %>"
           plugin.url = proc { Refinery::Core::Engine.routes.url_helpers.<%= namespacing.underscore %>_admin_<%= plural_name %>_path }

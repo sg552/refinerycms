@@ -1,7 +1,7 @@
 module Refinery
   module Authentication
     class Engine < ::Rails::Engine
-      include Refinery::Engine
+      extend Refinery::Engine
 
       isolate_namespace Refinery
       engine_name :refinery_authentication
@@ -12,7 +12,6 @@ module Refinery
         Refinery::Plugin.register do |plugin|
           plugin.pathname = root
           plugin.name = 'refinery_users'
-          plugin.version = %q{2.0.0}
           plugin.menu_match = %r{refinery/users$}
           plugin.activity = {
             :class_name => :'refinery/user',

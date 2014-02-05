@@ -4,15 +4,15 @@ module Refinery
   module Admin
     module BaseController
 
-      extend ActiveSupport::Concern
+      def self.included(base)
+        base.layout :layout?
 
-      included do
-        layout :layout?
+        base.before_filter :require_refinery_users!, :force_ssl!,
+                           :authenticate_refinery_user!, :restrict_plugins,
+                           :restrict_controller
+        base.after_filter :store_location?, :only => [:index] # for redirect_back_or_default
 
-        before_filter :authenticate_refinery_user!, :restrict_plugins, :restrict_controller
-        after_filter :store_location?, :only => [:index] # for redirect_back_or_default
-
-        helper_method :searching?, :group_by_date
+        base.helper_method :searching?, :group_by_date
       end
 
       def admin?
@@ -23,7 +23,11 @@ module Refinery
         params[:search].present?
       end
 
-    protected
+      protected
+
+      def force_ssl!
+        redirect_to :protocol => 'https' if Refinery::Core.force_ssl && !request.ssl?
+      end
 
       def group_by_date(records)
         new_records = []
@@ -35,6 +39,10 @@ module Refinery
         end
 
         new_records
+      end
+
+      def require_refinery_users!
+        redirect_to refinery.new_signup_path if just_installed? && controller_name != 'users'
       end
 
       def restrict_plugins
@@ -57,7 +65,7 @@ module Refinery
         end
       end
 
-    private
+      private
 
       def allow_controller?(controller_path)
         ::Refinery::Plugins.active.any? {|plugin|

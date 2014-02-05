@@ -1,50 +1,66 @@
 require 'devise'
 require 'friendly_id'
-require 'acts_as_indexed'
 
 module Refinery
   class User < Refinery::Core::BaseModel
     extend FriendlyId
 
-    has_and_belongs_to_many :roles, :join_table => :refinery_roles_users
+    has_and_belongs_to_many :roles, join_table: :refinery_roles_users
 
-    has_many :plugins, :class_name => "UserPlugin", :order => "position ASC", :dependent => :destroy
-    friendly_id :username, :use => [:slugged]
+    has_many :plugins, -> { order('position ASC') },
+                       class_name: "UserPlugin", dependent: :destroy
 
-    # Docs for acts_as_indexed http://github.com/dougal/acts_as_indexed
-    acts_as_indexed :fields => [:username, :email]
+    friendly_id :username, use: [:slugged]
 
     # Include default devise modules. Others available are:
     # :token_authenticatable, :confirmable, :lockable and :timeoutable
     if self.respond_to?(:devise)
       devise :database_authenticatable, :registerable, :recoverable, :rememberable,
-             :trackable, :validatable, :authentication_keys => [:login]
+             :trackable, :validatable, authentication_keys: [:login]
     end
 
     # Setup accessible (or protected) attributes for your model
     # :login is a virtual attribute for authenticating by either username or email
     # This is in addition to a real persisted field like 'username'
     attr_accessor :login
-    attr_accessible :email, :password, :password_confirmation, :remember_me, :username, :plugins, :login
 
-    validates :username, :presence => true, :uniqueness => true
-    before_validation :downcase_username
+    validates :username, presence: true, uniqueness: true
+    before_validation :downcase_username, :strip_username
 
     class << self
       # Find user by email or username.
       # https://github.com/plataformatec/devise/wiki/How-To:-Allow-users-to-sign_in-using-their-username-or-email-address
       def find_for_database_authentication(conditions)
         value = conditions[authentication_keys.first]
-        where(["username = :value OR email = :value", { :value => value }]).first
+        where(["username = :value OR email = :value", { value: value }]).first
       end
     end
 
     def plugins=(plugin_names)
-      if persisted? # don't add plugins when the user_id is nil.
-        UserPlugin.delete_all(:user_id => id)
+      return unless persisted?
 
+      plugin_names = plugin_names.dup
+      plugin_names.reject! { |plugin_name| !plugin_name.is_a?(String) }
+
+      if plugins.empty?
         plugin_names.each_with_index do |plugin_name, index|
-          plugins.create(:name => plugin_name, :position => index) if plugin_name.is_a?(String)
+          plugins.create(:name => plugin_name, :position => index)
+        end
+      else
+        assigned_plugins = plugins.load
+        assigned_plugins.each do |assigned_plugin|
+          if plugin_names.include?(assigned_plugin.name)
+            plugin_names.delete(assigned_plugin.name)
+          else
+            assigned_plugin.destroy
+          end
+        end
+
+        plugin_names.each do |plugin_name|
+          if plugin_name.is_a?(String)
+            plugins.create name: plugin_name,
+                           position: plugins.select(:position).map{|p| p.position.to_i}.max + 1
+          end
         end
       end
     end
@@ -61,10 +77,7 @@ module Refinery
     end
 
     def can_edit?(user_to_edit = self)
-      user_to_edit.persisted? && (
-        user_to_edit == self ||
-        self.has_role?(:superuser)
-      )
+      user_to_edit.persisted? && (user_to_edit == self || self.has_role?(:superuser))
     end
 
     def add_role(title)
@@ -94,7 +107,7 @@ module Refinery
     end
 
     def to_s
-      username.to_s
+      (full_name.presence || username).to_s
     end
 
     private
@@ -103,6 +116,12 @@ module Refinery
     # SELECT 1 FROM "refinery_users" WHERE LOWER("refinery_users"."username") = LOWER('UsErNAME') LIMIT 1
     def downcase_username
       self.username = self.username.downcase if self.username?
+    end
+
+    # To ensure that we aren't creating "admin" and "admin " as the same thing.
+    # Also ensures that "admin user" and "admin    user" are the same thing.
+    def strip_username
+      self.username = self.username.strip.gsub(/\ {2,}/, ' ') if self.username?
     end
 
   end

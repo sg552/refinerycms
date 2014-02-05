@@ -1,10 +1,8 @@
 module Refinery
-  module Engines; end;
-
   class Plugin
 
     attr_accessor :name, :class_name, :controller, :directory, :url,
-                  :version, :dashboard, :always_allow_access, :menu_match,
+                  :dashboard, :always_allow_access, :menu_match,
                   :hide_from_menu, :pathname, :plugin_activity
 
     def self.register(&block)

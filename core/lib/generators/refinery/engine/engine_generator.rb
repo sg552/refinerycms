@@ -18,22 +18,18 @@ module Refinery
     end
 
     def generate
-      sanity_check!
-
-      evaluate_templates!
-
-      unless options[:pretend]
-        merge_locales!
-
-        copy_or_merge_seeds!
-
-        append_extension_to_gemfile!
-      end
-
-      finalize_extension!
+      default_generate!
     end
 
-  protected
+    def backend_route
+      @backend_route ||= if namespacing.underscore != plural_name
+        %Q{"#\{Refinery::Core.backend_route\}/#{namespacing.underscore}"}
+      else
+        "Refinery::Core.backend_route"
+      end
+    end
+
+    protected
 
     def generator_command
       'rails generate refinery:engine'

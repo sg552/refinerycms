@@ -18,14 +18,13 @@ nl:
         actions:
           create_new_image: Nieuwe afbeelding toevoegen
         records:
-          no_images_yet: Er zijn nog geen afbeeldingen. Klik op "Nieuwe afbeelding toevoegen" om uw eerste afbleelding toe te voegen.
+          no_images_yet: Er zijn nog geen afbeeldingen. Klik op "Nieuwe afbeelding toevoegen" om uw eerste afbeelding toe te voegen.
         index:
           view:
             switch_to: De %{view_name}versie bekijken
             list: lijst
             grid: raster
-        grid_view:
-          view_live_html: Deze afbeelding bekijken <br/><em>Opent in een nieuw venster</em>
+        view_live_html: Deze afbeelding bekijken <br/><em>Opent in een nieuw venster</em>
         existing_image:
           button_text: Invoegen
           resize_image: De afbeelding schalen?

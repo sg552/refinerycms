@@ -51,7 +51,7 @@ module Refinery
     end
 
     describe ".create_resources" do
-      let(:file) { Refinery.roots(:'refinery/resources').join("spec/fixtures/refinery_is_awesome.txt") }
+      let(:file) { Refinery.roots('refinery/resources').join("spec/fixtures/refinery_is_awesome.txt") }
 
       context "only one resource uploaded" do
         it "returns an array containing one resource" do
@@ -82,7 +82,7 @@ module Refinery
     describe "validations" do
       describe "valid #file" do
         before do
-          @file = Refinery.roots(:'refinery/resources').join("spec/fixtures/refinery_is_awesome.txt")
+          @file = Refinery.roots('refinery/resources').join("spec/fixtures/refinery_is_awesome.txt")
           Resources.max_file_size = (File.read(@file).size + 10)
         end
 
@@ -93,7 +93,7 @@ module Refinery
 
       describe "too large #file" do
         before do
-          @file = Refinery.roots(:'refinery/resources').join("spec/fixtures/refinery_is_awesome.txt")
+          @file = Refinery.roots('refinery/resources').join("spec/fixtures/refinery_is_awesome.txt")
           Resources.max_file_size = (File.read(@file).size - 10)
           @resource = Resource.new(:file => @file)
         end
@@ -105,7 +105,10 @@ module Refinery
         it "should contain an error message" do
           @resource.valid?
           @resource.errors.should_not be_empty
-          @resource.errors[:file].should == ["File should be smaller than #{Resources.max_file_size} bytes in size"]
+          @resource.errors[:file].should == Array(::I18n.t(
+            'too_big', :scope => 'activerecord.errors.models.refinery/resource',
+                       :size => Resources.max_file_size
+          ))
         end
       end
 
@@ -117,7 +120,9 @@ module Refinery
         it "has an error message" do
           @resource.valid?
           @resource.errors.should_not be_empty
-          @resource.errors[:file].should == ["You must specify file for upload"]
+          @resource.errors[:file].should == Array(::I18n.t(
+            'blank', :scope => 'activerecord.errors.models.refinery/resource'
+          ))
         end
       end
     end

@@ -1,13 +1,11 @@
 require 'dragonfly'
-require 'acts_as_indexed'
 
 module Refinery
   class Image < Refinery::Core::BaseModel
-    ::Refinery::Images::Dragonfly.setup!
+    dragonfly_accessor :image, :app => :refinery_images
 
     include Images::Validators
 
-    image_accessor :image
 
     validates :image, :presence  => true
     validates_with ImageSizeValidator
@@ -16,12 +14,6 @@ module Refinery
                        :of => :image,
                        :in => ::Refinery::Images.whitelisted_mime_types,
                        :message => :incorrect_format
-
-    # Docs for acts_as_indexed http://github.com/dougal/acts_as_indexed
-    acts_as_indexed :fields => [:title]
-
-    # allows Mass-Assignment
-    attr_accessible :id, :image, :image_size
 
     delegate :size, :mime_type, :url, :width, :height, :to => :image
 
@@ -40,27 +32,32 @@ module Refinery
       end
     end
 
-    # Get a thumbnail job object given a geometry.
-    def thumbnail(geometry = nil)
-      if geometry.is_a?(Symbol) and Refinery::Images.user_image_sizes.keys.include?(geometry)
-        geometry = Refinery::Images.user_image_sizes[geometry]
-      end
-
-      if geometry.present? && !geometry.is_a?(Symbol)
-        image.thumb(geometry)
-      else
-        image
-      end
+    # Get a thumbnail job object given a geometry and whether to strip image profiles and comments.
+    def thumbnail(options = {})
+      options = { :geometry => nil, :strip => false }.merge(options)
+      geometry = convert_to_geometry(options[:geometry])
+      thumbnail = image
+      thumbnail = thumbnail.thumb(geometry) if geometry
+      thumbnail = thumbnail.strip if options[:strip]
+      thumbnail
     end
 
     # Intelligently works out dimensions for a thumbnail of this image based on the Dragonfly geometry string.
     def thumbnail_dimensions(geometry)
-      geometry = geometry.to_s
-      width = original_width = self.image_width.to_f
-      height = original_height = self.image_height.to_f
+      geometry = if geometry.is_a?(Symbol) && Refinery::Images.user_image_sizes.keys.include?(geometry)
+        Refinery::Images.user_image_sizes[geometry]
+      else
+        geometry.to_s
+      end
+
+      width = original_width = self.image.width.to_f
+      height = original_height = self.image.height.to_f
       geometry_width, geometry_height = geometry.split(%r{\#{1,2}|\+|>|!|x}im)[0..1].map(&:to_f)
-      if (original_width * original_height > 0) && ::Dragonfly::ImageMagick::Processor::THUMB_GEOMETRY === geometry
-        if ::Dragonfly::ImageMagick::Processor::RESIZE_GEOMETRY === geometry
+      thumb_geometry = Regexp.union(::Dragonfly::ImageMagick::Processors::Thumb::RESIZE_GEOMETRY,
+                                    ::Dragonfly::ImageMagick::Processors::Thumb::CROPPED_RESIZE_GEOMETRY,
+                                    ::Dragonfly::ImageMagick::Processors::Thumb::CROP_GEOMETRY)
+      if (original_width * original_height > 0) && thumb_geometry === geometry
+        if ::Dragonfly::ImageMagick::Processors::Thumb::RESIZE_GEOMETRY === geometry
           if geometry !~ %r{\d+x\d+>} || (%r{\d+x\d+>} === geometry && (width > geometry_width.to_f || height > geometry_height.to_f))
             # Try scaling with width factor first. (wf = width factor)
             wf_width = (original_width * geometry_width / width).round
@@ -98,6 +95,16 @@ module Refinery
     # my_file.jpg returns My File
     def title
       CGI::unescape(image_name.to_s).gsub(/\.\w+$/, '').titleize
+    end
+
+    private
+
+    def convert_to_geometry(geometry)
+      if geometry.is_a?(Symbol) && Refinery::Images.user_image_sizes.keys.include?(geometry)
+        Refinery::Images.user_image_sizes[geometry]
+      else
+        geometry
+      end
     end
 
   end

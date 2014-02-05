@@ -12,15 +12,24 @@ module Refinery
       end
 
       def template_options(template_type, current_page)
-        return {} if current_page.send(template_type)
+        html_options = { :selected => send("default_#{template_type}", current_page) }
 
-        if current_page.parent_id?
-          # Use Parent Template by default.
-          { :selected => current_page.parent.send(template_type) }
-        else
-          # Use Default Template (First in whitelist)
-          { :selected => Refinery::Pages.send("#{template_type}_whitelist").first }
+        if (template = current_page.send(template_type).presence)
+          html_options.update :selected => template
+        elsif current_page.parent_id? && !current_page.send(template_type).presence
+          template = current_page.parent.send(template_type).presence
+          html_options.update :selected => template if template
         end
+
+        html_options
+      end
+
+      def default_view_template(current_page)
+        current_page.link_url == "/" ? "home" : "show"
+      end
+
+      def default_layout_template(current_page)
+        "application"
       end
 
       # In the admin area we use a slightly different title
@@ -35,17 +44,13 @@ module Refinery
           ::I18n.t('draft', :scope => 'refinery.admin.pages.page')
         end if page.draft?
 
-        meta_information.html_safe
+        meta_information
       end
 
       # We show the title from the next available locale
       # if there is no title for the current locale
       def page_title_with_translations(page)
-        if page.title.present?
-          page.title
-        else
-          page.translations.detect {|t| t.title.present?}.title
-        end
+        page.title.presence || page.translations.detect {|t| t.title.present?}.title
       end
     end
   end

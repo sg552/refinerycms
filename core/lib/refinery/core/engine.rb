@@ -1,20 +1,15 @@
 module Refinery
   module Core
     class Engine < ::Rails::Engine
-      include Refinery::Engine
+      extend Refinery::Engine
 
       isolate_namespace Refinery
       engine_name :refinery
 
       class << self
-        # Require/load (based on Rails app.config) all decorators from app/decorators/
-        # and from registered plugins' paths too.
-        def load_decorators
-          [Rails.root, Refinery::Plugins.registered.pathnames].flatten.map { |p|
-            Dir[p.join('app', 'decorators', '**', '*_decorator.rb')]
-          }.flatten.uniq.each do |decorator|
-            Rails.application.config.cache_classes ? require(decorator) : load(decorator)
-          end
+        # Register all decorators from app/decorators/ and registered plugins' paths.
+        def register_decorators!
+          Decorators.register! Rails.root, Refinery::Plugins.registered.pathnames
         end
 
         # Performs the Refinery inclusion process which extends the currently loaded Rails
@@ -36,7 +31,7 @@ module Refinery
       # Include the refinery controllers and helpers dynamically
       config.to_prepare &method(:refinery_inclusion!).to_proc
 
-      after_inclusion &method(:load_decorators).to_proc
+      after_inclusion &method(:register_decorators!).to_proc
 
       # Wrap errors in spans
       config.to_prepare do
@@ -54,7 +49,6 @@ module Refinery
           plugin.pathname = root
           plugin.name = 'refinery_core'
           plugin.class_name = 'RefineryEngine'
-          plugin.version = Refinery.version
           plugin.hide_from_menu = true
           plugin.always_allow_access = true
           plugin.menu_match = /refinery\/(refinery_)?core$/
@@ -65,7 +59,6 @@ module Refinery
         Refinery::Plugin.register do |plugin|
           plugin.pathname = root
           plugin.name = 'refinery_dialogs'
-          plugin.version = Refinery.version
           plugin.hide_from_menu = true
           plugin.always_allow_access = true
           plugin.menu_match = /refinery\/(refinery_)?dialogs/
@@ -74,7 +67,7 @@ module Refinery
 
       initializer "refinery.routes", :after => :set_routes_reloader_hook do |app|
         Refinery::Core::Engine.routes.append do
-          get '/refinery/*path' => 'admin/base#error_404'
+          get "#{Refinery::Core.backend_route}/*path" => 'admin#error_404'
         end
       end
 
@@ -95,13 +88,8 @@ module Refinery
           "wymeditor/skins/refinery/*",
           "wymeditor/skins/refinery/**/*",
           "modernizr-min.js",
-          "dd_belatedpng.js"
+          "admin.js"
         ]
-      end
-
-      # Disable asset debugging - it's a performance killer in dev mode
-      initializer "refinery.assets.pipeline" do |app|
-        app.config.assets.debug = false
       end
 
       # active model fields which may contain sensitive data to filter

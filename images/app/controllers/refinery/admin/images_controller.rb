@@ -29,7 +29,7 @@ module Refinery
           extra_condition[1] = nil if extra_condition[1] == "nil"
         end
 
-        find_all_images(({extra_condition[0].to_sym => extra_condition[1]} if extra_condition.present?))
+        find_all_images(({extra_condition[0] => extra_condition[1]} if extra_condition.present?))
         search_all_images if searching?
 
         paginate_images
@@ -40,12 +40,12 @@ module Refinery
       def create
         @images = []
         begin
-          unless params[:image].present? and params[:image][:image].is_a?(Array)
-            @images << (@image = ::Refinery::Image.create(params[:image]))
-          else
+          if params[:image].present? && params[:image][:image].is_a?(Array)
             params[:image][:image].each do |image|
-              @images << (@image = ::Refinery::Image.create({:image => image}.merge(params[:image].except(:image))))
+              @images << (@image = ::Refinery::Image.create({:image => image}.merge(image_params.except(:image))))
             end
+          else
+            @images << (@image = ::Refinery::Image.create(image_params))
           end
         rescue Dragonfly::FunctionManager::UnableToHandle
           logger.warn($!.message)
@@ -70,15 +70,15 @@ module Refinery
           if @images.all?(&:valid?)
             @image_id = @image.id if @image.persisted?
             @image = nil
-
-            self.insert
           end
+
+          self.insert
         end
       end
 
       def update
         attributes_before_assignment = @image.attributes
-        @image.attributes = params[:image]
+        @image.attributes = image_params
         if @image.valid? && @image.save
           flash.notice = t(
             'refinery.crudify.updated',
@@ -113,7 +113,7 @@ module Refinery
         end
       end
 
-    protected
+      protected
 
       def init_dialog
         @app_dialog = params[:app_dialog].present?
@@ -139,8 +139,8 @@ module Refinery
         super unless action_name == 'insert'
       end
 
-      def store_current_location!
-        super unless action_name == 'insert' or from_dialog?
+      def image_params
+        params.require(:image).permit(:image, :image_size)
       end
 
     end

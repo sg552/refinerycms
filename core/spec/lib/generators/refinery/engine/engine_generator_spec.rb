@@ -40,12 +40,15 @@ module Refinery
                     directory "rspec_product_tests" do
                       directory "admin" do
                         directory "rspec_product_tests" do
+                          file "_actions.html.erb"
                           file "_form.html.erb"
+                          file "_records.html.erb"
+                          file "_rspec_product_test.html.erb"
+                          file "_rspec_product_tests.html.erb"
                           file "_sortable_list.html.erb"
                           file "edit.html.erb"
                           file "index.html.erb"
                           file "new.html.erb"
-                          file "_rspec_product_test.html.erb"
                         end
                       end
                       directory "rspec_product_tests" do
@@ -56,49 +59,87 @@ module Refinery
                   end
                 end
               end
+              directory "config" do
+                directory "locales" do
+                  file "cs.yml"
+                  file "en.yml"
+                  file "es.yml"
+                  file "fr.yml"
+                  file "it.yml"
+                  file "nb.yml"
+                  file "nl.yml"
+                  file "sk.yml"
+                  file "tr.yml"
+                  file "zh-CN.yml"
+                end
+                file "routes.rb"
+              end
+              directory "db" do
+                directory "migrate" do
+                  file "1_create_rspec_product_tests_rspec_product_tests.rb"
+                end
+                file "seeds.rb"
+              end
               directory "lib" do
+                directory "generators" do
+                  directory "refinery" do
+                    file "rspec_product_tests_generator.rb"
+                  end
+                end
+                directory "refinery" do
+                  directory "rspec_product_tests" do
+                    file "engine.rb"
+                  end
+                  file "rspec_product_tests.rb"
+                end
+                directory "tasks" do
+                  directory "refinery" do
+                    file "rspec_product_tests.rake"
+                  end
+                end
                 file "refinerycms-rspec_product_tests.rb"
               end
+              directory "script" do
+                file "rails"
+              end
               directory "spec" do
+                directory "features" do
+                  directory "refinery" do
+                    directory "rspec_product_tests" do
+                      directory "admin" do
+                        file "rspec_product_tests_spec.rb"
+                      end
+                    end
+                  end
+                end
+                directory "models" do
+                  directory "refinery" do
+                    directory "rspec_product_tests" do
+                      file "rspec_product_test_spec.rb"
+                    end
+                  end
+                end
+                directory "support" do
+                  directory "factories" do
+                    directory "refinery" do
+                      file "rspec_product_tests.rb"
+                    end
+                  end
+                end
                 file "spec_helper.rb"
               end
               directory "tasks" do
                 file "testing.rake"
                 file "rspec.rake"
               end
-              directory "config" do
-                directory "locales" do
-                  file "en.yml"
-                end
-                file "routes.rb"
-              end
-              file "Guardfile"
               file "Gemfile"
               file "Rakefile"
+              file "readme.md"
+              file "refinerycms-rspec_product_tests.gemspec"
             end
           end
         end
       }
-    end
-
-    context "when generating extension inside existing extensions dir" do
-      before do
-        run_generator %w{ rspec_item_test title:string --extension rspec_product_tests --skip }
-      end
-
-      it "appends existing seeds file" do
-        File.open("#{destination_root}/vendor/extensions/rspec_product_tests/db/seeds.rb") do |file|
-          file.grep(%r{/rspec_product_tests|/rspec_item_tests}).count.should eq(2)
-        end
-      end
-    end
-
-    describe "attr_accessible" do
-      it "adds attributes to the list" do
-        File.open("#{destination_root}/vendor/extensions/rspec_product_tests/app/models/refinery/rspec_product_tests/rspec_product_test.rb") do |file|
-          file.grep(%r{attr_accessible :title, :description, :image_id, :brochure_id, :position}).count.should eq(1)
-        end
-      end
     end
   end
 end

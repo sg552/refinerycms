@@ -4,7 +4,7 @@ __An open source Ruby on Rails content management system for Rails 3.__
 
 More information at [http://refinerycms.com](http://refinerycms.com)
 
-[![Build Status](https://secure.travis-ci.org/refinery/refinerycms.png)](http://travis-ci.org/refinery/refinerycms)
+[![Build Status](https://travis-ci.org/refinery/refinerycms.png?branch=master)](https://travis-ci.org/refinery/refinerycms)  [![Code Climate](https://codeclimate.com/github/refinery/refinerycms.png)](https://codeclimate.com/github/refinery/refinerycms)
 
 ## Requirements
 
@@ -16,7 +16,7 @@ More information at [http://refinerycms.com](http://refinerycms.com)
 
 * __[Install Refinery CMS](http://refinerycms.com/download)__
 * [Install Refinery CMS on Heroku](http://refinerycms.com/guides/heroku)
-* [Contribute to Refinery CMS](http://refinerycms.com/guides/contributing-to-refinery)
+* [Contribute to Refinery CMS](readme.md#contributing)
 
 ## Getting Started
 
@@ -95,9 +95,15 @@ For help run the command without any options:
 
 [List here (add your link when you're done)](https://github.com/refinery/refinerycms/wiki/Example-Site-Showcase)
 
+## Contributing
+
+See [contributing.md](contributing.md)
+and [Contributing to Refinery](http://refinerycms.com/guides/contributing-to-refinery)
+guide for details about contributing and running test.
+
 ## License
 
-Refinery is released under the [MIT license](https://github.com/refinery/refinerycms/blob/master/license.md#readme) and is copyright (c) 2005-2012 [Resolve Digital](http://www.resolvedigital.com)
+Refinery is released under the MIT license. See the [license.md file](license.md#readme) for details.
 
 ### Credits
 

@@ -8,7 +8,7 @@ endprologue.
 
 h3. Setup
 
-Before you start translating, you should clone a fresh copy of Refinery from GitHub. See "this guide":guides/contributing-to-refinery for information how to do that.
+Before you start translating, you should clone a fresh copy of Refinery from GitHub. See "this guide":/guides/contributing-to-refinery for information how to do that.
 
 It's not required, but we strongly advise you to create a separate branch when adding a translation or a new feature. You can do so by typing the following shell command.
 
@@ -65,7 +65,7 @@ nl:
 
 Order the keys exactly like the en.yml version. This way, you can use a diff-enabled-editor to open both the +en.yml+ and +nl.yml+ file to quickly update the locale. If you are making changes to the +en.yml+ file, alphabetically list keys you add.
 
-TIP: If you're starting a translation for a new language, copy +en.yml+ to "your_locale".yml</p>
+TIP: If you're starting a translation for a new language, copy +en.yml+ to "your_locale".yml
 
 WARNING: Make sure you change +en:+ to your locale's key at the top of "your_locale".yml to avoid overriding the English translation (e.g. +nl:+)
 

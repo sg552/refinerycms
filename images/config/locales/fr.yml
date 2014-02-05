@@ -24,8 +24,7 @@ fr:
             switch_to: Afficher sous forme de %{view_name}
             list: liste
             grid: grille
-        grid_view:
-          view_live_html: "Voir cette image<br/><em>Ouvre une nouvelle fenêtre</em>"
+        view_live_html: "Voir cette image<br/><em>Ouvre une nouvelle fenêtre</em>"
         existing_image:
           button_text: Insérer
           resize_image: Redimensionner l'image ?
@@ -42,3 +41,4 @@ fr:
           blank: Vous devez sélectionner une image à télécharger
           too_big: L'image doit être plus petite que %{size} megaoctets
           incorrect_format: 'Seules les images aux formats JPG, PNG or GIF sont acceptées'
+          different_file_name: La nouvelle image ne peut pas avoir un nom de fichier différent

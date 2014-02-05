@@ -88,7 +88,7 @@ describe Refinery do
       it "should raise invalid extension exception" do
         lambda {
           subject.send(:validate_extension!, Refinery::InvalidEngine)
-        }.should raise_error(Refinery::InvalidEngineError, "Engine must define a root accessor that returns a pathname to its root")
+        }.should raise_error
       end
     end
   end
@@ -139,18 +139,6 @@ describe Refinery do
       Refinery.deprecate("ugis", :when => "10.0", :replacement => "philip")
       @errors.rewind
       @errors.read.should == "\n-- DEPRECATION WARNING --\nThe use of 'ugis' is deprecated and will be removed at version 10.0.\nPlease use philip instead.\n"
-    end
-  end
-
-  describe "#i18n_enabled?" do
-    it "returns true when Refinery::I18n.enabled? is true" do
-      Refinery::I18n.stub(:enabled?).and_return(true)
-      subject.i18n_enabled?.should == true
-    end
-
-    it "returns false when Refinery::I18n.enabled? is false" do
-      Refinery::I18n.stub(:enabled?).and_return(false)
-      subject.i18n_enabled?.should == false
     end
   end
 

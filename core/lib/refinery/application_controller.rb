@@ -1,32 +1,19 @@
 module Refinery
   module ApplicationController
 
-    extend ActiveSupport::Concern
+    def self.included(base) # Extend controller
+      base.helper_method :home_page?, :local_request?, :just_installed?,
+                         :from_dialog?, :admin?, :login?
 
-    included do # Extend controller
-      helper_method :home_page?,
-                    :local_request?,
-                    :just_installed?,
-                    :from_dialog?,
-                    :admin?,
-                    :login?
+      base.protect_from_forgery # See ActionController::RequestForgeryProtection
 
-      protect_from_forgery # See ActionController::RequestForgeryProtection
-
-      send :include, Refinery::Crud # basic create, read, update and delete methods
-
-      send :before_filter, :refinery_user_required?, :if => :admin?
-
-      send :before_filter, :force_ssl?, :if => :admin?
-
-      send :after_filter, :store_current_location!,
-                          :if => Proc.new {|c| send(:refinery_user?) }
+      base.send :include, Refinery::Crud # basic create, read, update and delete methods
 
       if Refinery::Core.rescue_not_found
-        send :rescue_from, ActiveRecord::RecordNotFound,
-                           ::AbstractController::ActionNotFound,
-                           ActionView::MissingTemplate,
-                           :with => :error_404
+        base.rescue_from ActiveRecord::RecordNotFound,
+                         ::AbstractController::ActionNotFound,
+                         ActionView::MissingTemplate,
+                         :with => :error_404
       end
     end
 
@@ -37,7 +24,7 @@ module Refinery
     def error_404(exception=nil)
       # fallback to the default 404.html page.
       file = Rails.root.join 'public', '404.html'
-      file = Refinery.roots(:'refinery/core').join('public', '404.html') unless file.exist?
+      file = Refinery.roots('refinery/core').join('public', '404.html') unless file.exist?
       render :file => file.cleanpath.to_s.gsub(%r{#{file.extname}$}, ''),
              :layout => false, :status => 404, :formats => [:html]
       return false
@@ -65,10 +52,6 @@ module Refinery
 
   protected
 
-    def force_ssl?
-      redirect_to :protocol => 'https' if !request.ssl? && Refinery::Core.force_ssl
-    end
-
     # use a different model for the meta information.
     def present(model)
       @meta = presenter_for(model).new(model)
@@ -80,21 +63,6 @@ module Refinery
       "#{model.class.name}Presenter".constantize
     rescue NameError
       default
-    end
-
-    def refinery_user_required?
-      if just_installed? && controller_name != 'users'
-        redirect_to refinery.signup_path
-      end
-    end
-
-  private
-
-    def store_current_location!
-      if admin? && request.get? && !request.xhr? && !from_dialog?
-        # ensure that we don't redirect to AJAX or POST/PUT/DELETE urls
-        session[:refinery_return_to] = request.path.sub('//', '/')
-      end
     end
   end
 end

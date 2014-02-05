@@ -3,7 +3,7 @@
   <span class='title'>
     <%%= <%= singular_name %>.<%= title_attribute %> %>
 <% if localized? %>
-    <%% if Refinery.i18n_enabled? and Refinery::I18n.frontend_locales.many? %>
+    <%% if Refinery::I18n.frontend_locales.many? %>
       <span class='preview'>
         <%% <%= singular_name %>.translations.each do |translation| %>
           <%% if translation.<%= title_attribute %>.present? %>
@@ -27,7 +27,7 @@
     <%%= link_to refinery_icon_tag("delete.png"), refinery.<%= namespacing.underscore %>_admin_<%= singular_name %>_path(<%= singular_name %>),
         :class => "cancel confirm-delete",
         :title => t('.delete'),
-        :confirm => t('message', :scope => 'refinery.admin.delete', :title => <%= singular_name %>.<%= title_attribute %>),
+        :data => {:confirm => t('message', :scope => 'refinery.admin.delete', :title => <%= singular_name %>.<%= title_attribute %>)},
         :method => :delete %>
   </span>
 </li>
